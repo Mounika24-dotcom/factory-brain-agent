@@ -1,0 +1,23 @@
+event_id,machine_id,shift,date,downtime_start,downtime_end,duration_min,downtime_type,reason_code,reason_description,technician_id,resolved
+DT-001,M-07,Shift1,2024-03-14,06:12,06:51,39,Unplanned,BRK-03,Hydraulic pressure loss,TECH-04,Yes
+DT-002,M-02,Shift1,2024-03-14,07:30,08:03,33,Unplanned,BRK-07,Welding wire feed jam,TECH-01,Yes
+DT-003,M-06,Shift1,2024-03-14,08:15,08:53,38,Unplanned,BRK-12,Blade wear — emergency replace,TECH-02,Yes
+DT-004,M-07,Shift1,2024-03-14,10:20,11:16,56,Unplanned,BRK-03,Hydraulic pressure loss (recurrence),TECH-04,Partial
+DT-005,M-01,Shift1,2024-03-14,11:00,11:18,18,Planned,CHG-01,Product changeover,OP-011,Yes
+DT-006,M-04,Shift1,2024-03-14,13:00,13:14,14,Planned,PM-01,Scheduled lubrication,TECH-03,Yes
+DT-007,M-03,Shift1,2024-03-14,14:05,14:27,22,Operational,OPS-02,Waiting for paint batch delivery,,Yes
+DT-008,M-08,Shift1,2024-03-14,15:30,15:46,16,Planned,CHG-01,Product changeover,OP-088,Yes
+DT-009,M-07,Shift2,2024-03-14,16:30,17:18,48,Unplanned,BRK-03,Hydraulic pressure loss (3rd event),TECH-04,No
+DT-010,M-02,Shift2,2024-03-14,17:45,18:15,30,Unplanned,BRK-09,Coolant leak at joint,TECH-01,Yes
+DT-011,M-06,Shift2,2024-03-14,18:30,19:00,30,Planned,PM-02,Scheduled blade change,TECH-02,Yes
+DT-012,M-04,Shift2,2024-03-14,19:00,19:22,22,Unplanned,BRK-14,Vision system calibration fault,TECH-03,Yes
+DT-013,M-03,Shift2,2024-03-14,20:15,20:43,28,Operational,OPS-02,Waiting for material,,Yes
+DT-014,M-01,Shift2,2024-03-14,21:00,21:24,24,Planned,CHG-01,Product changeover,OP-012,Yes
+DT-015,M-05,Shift2,2024-03-14,21:30,21:42,12,Planned,PM-01,Scheduled lubrication,TECH-05,Yes
+DT-016,M-07,Shift3,2024-03-14,00:30,01:52,82,Unplanned,BRK-03,Hydraulic pump failure — pump replaced,TECH-04,Yes
+DT-017,M-02,Shift3,2024-03-14,02:00,02:36,36,Unplanned,BRK-07,Wire feed jam (recurrence),TECH-01,Yes
+DT-018,M-06,Shift3,2024-03-14,03:15,03:47,32,Unplanned,BRK-11,Motor overtemperature trip,TECH-02,Yes
+DT-019,M-01,Shift3,2024-03-14,04:00,04:20,20,Planned,CHG-01,Product changeover,OP-013,Yes
+DT-020,M-04,Shift3,2024-03-14,04:45,04:57,12,Planned,PM-01,Scheduled lubrication,TECH-03,Yes
+DT-021,M-08,Shift3,2024-03-14,05:10,05:23,13,Planned,CHG-02,Drill bit change,OP-090,Yes
+DT-022,M-03,Shift3,2024-03-14,05:30,05:48,18,Operational,OPS-01,Waiting for operator (break overrun),,Yes
