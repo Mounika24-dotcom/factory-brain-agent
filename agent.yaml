@@ -1,0 +1,33 @@
+spec_version: "0.1.0"
+name: factory-brain-agent
+version: 0.1.0
+description: "An industrial intelligence agent that analyzes factory CSV data to detect bottlenecks, machine inefficiencies, and anomalies — then delivers prioritized optimization recommendations."
+model:
+  preferred: "anthropic:claude-sonnet-4-5-20250929"
+  fallback:
+    - "openai:gpt-4o"
+
+tools:
+  - cli
+  - read
+  - write
+  - memory
+
+runtime:
+  max_turns: 50
+  timeout: 300
+
+skills:
+  - detect-bottlenecks
+  - downtime-analysis
+  - anomaly-detection
+  - optimization-suggestions
+  - shift-report
+  - oee-calculator
+tags:
+  - hackathon
+  - manufacturing
+  - industrial
+  - analytics
+  - csv
+  - optimization
