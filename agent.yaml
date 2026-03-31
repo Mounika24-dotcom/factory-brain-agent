@@ -3,7 +3,7 @@ name: factory-brain-agent
 version: 0.1.0
 description: "An industrial intelligence agent that analyzes factory CSV data to detect bottlenecks, machine inefficiencies, and anomalies — then delivers prioritized optimization recommendations."
 model:
-  preferred: "anthropic:claude-sonnet-4-5-20250929"
+  preferred: "anthropic:claude-sonnet-4-5"
   fallback:
     - "openai:gpt-4o"
 
