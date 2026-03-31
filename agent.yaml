@@ -7,15 +7,10 @@ model:
   fallback:
     - "openai:gpt-4o"
 
-tools:
-  - cli
-  - read
-  - write
-  - memory
-
+tools: [cli, read, write, memory]
 runtime:
   max_turns: 50
-  timeout: 300
+  timeout: 180
 
 skills:
   - detect-bottlenecks
