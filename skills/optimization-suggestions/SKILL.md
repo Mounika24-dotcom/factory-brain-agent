@@ -1,74 +1,71 @@
 ---
 name: optimization-suggestions
-description: "Synthesizes findings from bottleneck, downtime, and anomaly analyses into a prioritized list of optimization recommendations with estimated impact."
-allowed-tools: Bash Read Write
+description: "Synthesizes all findings into a prioritized optimization roadmap ranked by Impact vs Effort. The final deliverable skill."
+allowed-tools: cli read write
 ---
 
 # Optimization Suggestions
 
-## Purpose
-Turn analysis into a ranked action plan. Every finding from the other skills feeds into this skill, which outputs a prioritized improvement roadmap — ordered by impact vs. effort — that a plant manager can act on this week.
+When this skill is invoked, immediately take action. Use the `read` tool to open any CSV files the user mentioned. Do not wait for further instructions.
 
-## Expected Input
-This skill works best when called after the other skills have run. It accepts:
-- The outputs of `detect-bottlenecks`, `downtime-analysis`, `anomaly-detection` (as text summaries or the original CSV data)
-- Optionally: production targets, headcount, shift schedule
+## Step 1 — Read all available data
+Use the `read` tool to open the files the user specified. If none specified, read both:
+- `demo/production_data.csv`
+- `demo/machine_downtime_log.csv`
 
-If called directly on raw CSV, it runs a lightweight version of all three analyses first.
+## Step 2 — Run lightweight analysis
+From the production data, identify:
+- The bottleneck machine (highest cycle time)
+- Machines far below production target
+- Machines with high downtime_min
 
-## Steps
+From the downtime data, identify:
+- Machines with most unplanned events
+- Any repeat failures
 
-1. **Collect all findings** — list every identified issue from prior analyses (or generate them from raw data).
+## Step 3 — Score every finding
+For each problem found, assign:
+- Impact score 1-5: How much does fixing this improve output or uptime?
+  - 5 = line-stopping or >10% OEE impact
+  - 3 = measurable but not critical
+  - 1 = marginal
+- Effort score 1-5: How hard to fix?
+  - 1 = can be done today (scheduling tweak, parameter change)
+  - 3 = needs parts or maintenance window
+  - 5 = capital investment
 
-2. **Score each issue** on two dimensions:
-   - **Impact** (1–5): How much does fixing this improve throughput, quality, or uptime?
-     - 5 = line-stopping or >10% OEE impact
-     - 3 = measurable but not critical
-     - 1 = marginal improvement
-   - **Effort** (1–5): How hard is this to fix?
-     - 1 = can be done this shift (scheduling change, parameter tweak)
-     - 3 = requires maintenance window or parts
-     - 5 = capital investment or multi-week project
+Priority = Impact / Effort (higher = do first)
 
-3. **Calculate priority score** = Impact / Effort (higher = do it first)
+## Step 4 — Group by time horizon
+- Immediate (this week): Priority >= 3.0, no major parts needed
+- Short-term (1-4 weeks): Priority >= 2.0
+- Strategic (1-3 months): Priority < 2.0 or needs capital
 
-4. **Group by time horizon**:
-   - **Immediate** (today/this week): score ≥ 3.0, no parts needed
-   - **Short-term** (1–4 weeks): score ≥ 2.0, parts/planning needed
-   - **Strategic** (1–3 months): score < 2.0 or requires capital
+## Step 5 — Print the full roadmap
 
-5. **Report format**:
+FACTORY OPTIMIZATION ROADMAP
+=============================
+Files analyzed: [list] | Machines: [N] | Shifts: [N]
 
-```
-OPTIMIZATION ROADMAP
-====================
-Generated from: [source files / analyses]
-Production context: [shift count, machines analyzed, time period]
+Current state:
+  Line OEE estimate : [X]%  (target: 85%)
+  Primary bottleneck: [Machine]
+  Worst downtime    : [Machine] ([X] min unplanned)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- IMMEDIATE ACTIONS (do this week)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Priority  Finding                          Action                        Est. Impact
---------  -------                          ------                        -----------
-  4.5     M-07: repeat failures (MTBF 4h)  Escalate to RCA, inspect      +8% uptime
-  4.0     Bottleneck: Station 3 (38s/unit) Add 2nd operator at station   +12% throughput
-  3.5     Shift handover gap 14:00–15:00   Implement overlap checklist   -6% downtime
+IMMEDIATE ACTIONS — Do This Week
+  Priority  Finding                          Recommended Action              Est. Impact
+  --------  -------                          ------------------              -----------
+  [X.X]     [Machine]: [problem]             [Specific action]               [X]% improvement
+  [X.X]     [Finding]                        [Action]                        [impact]
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- SHORT-TERM (1–4 weeks)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  2.5     M-04: bearing wear signal        Schedule bearing replacement   Prevent failure
-  2.0     High changeover time at M-02     Implement SMED analysis        -15 min/changeover
+SHORT-TERM — 1 to 4 Weeks
+  Priority  Finding                          Recommended Action              Est. Impact
+  [X.X]     [Finding]                        [Action]                        [impact]
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- STRATEGIC (1–3 months)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  1.5     Station 3 cycle time root cause  Process re-engineering study   +18% throughput
+STRATEGIC — 1 to 3 Months
+  Priority  Finding                          Recommended Action              Est. Impact
+  [X.X]     [Finding]                        [Action]                        [impact]
 
-Overall OEE improvement potential: [X]% → [Y]% if immediate actions completed
-```
-
-## Notes
-- Never recommend an action that requires data not present in the CSV (e.g., "hire more staff" without knowing current headcount).
-- Always lead with the highest-priority item — do not bury the lead in methodology.
-- If two recommendations conflict (e.g., "speed up Station 3" and "Station 3 needs maintenance window"), flag the conflict explicitly.
+If all IMMEDIATE actions are completed:
+  Estimated OEE improvement: [X]% → [Y]%
+  Estimated throughput gain: +[X] units/shift

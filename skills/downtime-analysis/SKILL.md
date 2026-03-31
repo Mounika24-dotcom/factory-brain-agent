@@ -1,73 +1,62 @@
 ---
 name: downtime-analysis
-description: "Analyzes machine downtime logs to classify idle time, identify chronic offenders, and compute MTBF/MTTR metrics for each machine."
-allowed-tools: Bash Read Write
+description: "Analyzes machine downtime logs to classify idle time, identify chronic failure machines, and compute MTBF and MTTR reliability metrics."
+allowed-tools: cli read write
 ---
 
 # Downtime Analysis
 
-## Purpose
-Downtime is lost money. This skill classifies every downtime event, finds which machines fail most often, and computes the key reliability metrics maintenance teams use to plan interventions.
+When this skill is invoked, immediately take action. Use the `read` tool right now. Do not wait for further instructions.
 
-## Expected Input
-A CSV with at least:
-- `machine_id` — which machine
-- `downtime_start` and `downtime_end` (or `downtime_duration_min`) — when and how long
-- `reason` or `downtime_type` — cause category (breakdown, changeover, planned maintenance, waiting for material, etc.)
-- `shift` or `date` — time context
+## Step 1 — Read the file immediately
+Use the `read` tool to open the file the user specified. If none specified, read `demo/machine_downtime_log.csv`.
 
-## Steps
+## Step 2 — Classify each downtime event
+Read each row and classify the downtime_type or reason into:
+- Unplanned: breakdown, fault, failure, emergency, overtemperature, jam
+- Planned: scheduled maintenance, changeover, lubrication, PM
+- Operational: waiting for material, waiting for operator, quality hold
 
-1. **Parse and validate** — check for missing timestamps, overlapping events, or unknown reason codes. Report data quality issues.
+## Step 3 — Compute per-machine metrics
+For each machine_id:
+- Total downtime minutes (all types)
+- Unplanned downtime minutes
+- Unplanned downtime % = unplanned_min / total_planned_time * 100
+  (assume 480 min per shift, multiply by number of shifts if not given)
+- Number of unplanned events
+- MTBF = available operating time / number of unplanned failures
+- MTTR = total unplanned downtime / number of unplanned events
+- Check: are there repeat failures on same machine within 48 hours? (bad repair signal)
 
-2. **Classify downtime events**:
-   - Planned: scheduled maintenance, changeover, breaks
-   - Unplanned: breakdown, fault, power failure
-   - Operational: waiting for material, waiting for operator, quality hold
-   Label each row with its class.
+## Step 4 — Print the full report
 
-3. **Calculate per-machine metrics**:
-   - Total downtime (min) — split by planned / unplanned / operational
-   - Downtime % = total downtime / total time window × 100
-   - Number of unplanned events
-   - MTBF (Mean Time Between Failures) = operating time / number of failures
-   - MTTR (Mean Time To Repair) = total repair time / number of repairs
+DOWNTIME ANALYSIS REPORT
+=========================
+File: [filename] | Events: [N] | Period: [date range]
 
-4. **Rank machines by unplanned downtime %** — this is the critical number.
+All events summary:
+  Total events     : [N]
+  Unplanned        : [N] events — [X] min total
+  Planned          : [N] events — [X] min total
+  Operational      : [N] events — [X] min total
 
-5. **Identify patterns**:
-   - Does downtime spike at shift change?
-   - Is one machine responsible for >30% of all unplanned downtime?
-   - Are there repeat failures on the same machine within 48 hours (indicating a bad repair)?
-
-6. **Report format**:
-
-```
-DOWNTIME ANALYSIS
-=================
-Period: [start] to [end]  |  Total events: [N]  |  Total downtime: [X] hrs
-
-By machine (ranked by unplanned downtime %):
-  Machine    Unplanned%  MTBF     MTTR    Events
-  -------    ----------  ----     ----    ------
-  M-07       31.4%       4.2 hr   48 min  12
-  M-03       18.7%       7.8 hr   31 min   8
-  ...
+Per-machine ranking (worst unplanned downtime first):
+  Machine  Unplanned%  Unplanned Min  MTBF      MTTR      Repeat Failures
+  -------  ----------  -------------  ----      ----      ---------------
+  [M-XX]   [X.X]%      [X] min        [X.X] hr  [X] min   [N] (WARNING if >1)
+  [all machines]
 
 Top failure reasons (unplanned only):
-  1. Sensor fault         — 34% of events
-  2. Mechanical jam       — 28% of events
-  3. Overtemperature trip — 19% of events
+  1. [Reason]  — [N] events ([X]%)
+  2. [Reason]  — [N] events ([X]%)
+  3. [Reason]  — [N] events ([X]%)
 
 Patterns detected:
-  ⚠ M-07: 4 repeat failures within 48h — repair may not be resolving root cause
-  ⚠ Downtime spikes between 14:00–15:00 across all machines (shift handover gap?)
+  [Any machine with repeat failures within 48h — flag as BAD REPAIR]
+  [Any time-of-day pattern across machines]
+  [Any machine responsible for >30% of all unplanned downtime]
 
-Recommendations:
-  → M-07: Escalate to root cause analysis. MTBF of 4.2h is critical threshold.
-  → Shift handover: introduce 10-min overlap checklist to close the 14:00 gap.
-```
-
-## Notes
-- If reason codes are missing, still compute duration metrics but flag classification as incomplete.
-- Never conflate planned and unplanned downtime in the headline figure — they have completely different business implications.
+RECOMMENDATIONS:
+  1. [Worst machine]: [specific action based on failure reason]
+  2. [Repeat failure machine]: Escalate to root cause analysis
+  3. [Pattern finding]: [specific operational change]

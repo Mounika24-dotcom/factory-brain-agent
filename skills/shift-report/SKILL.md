@@ -1,73 +1,67 @@
 ---
 name: shift-report
-description: "Generates a concise shift summary report in Markdown — key metrics, top issues, and next-shift recommendations — from a single shift's production CSV."
-allowed-tools: Bash Read Write
+description: "Generates a concise end-of-shift handover report in Markdown from production CSV data. Covers headline metrics, top issues, open actions, and next-shift recommendations."
+allowed-tools: cli read write
 ---
 
 # Shift Report
 
-## Purpose
-At the end of every shift, the outgoing team needs a crisp handover document. This skill generates it automatically from raw CSV data — saving 20–30 minutes of manual report writing and ensuring nothing gets missed.
+When this skill is invoked, immediately take action. Use the `read` tool right now to open the file. Do not wait for further instructions.
 
-## Expected Input
-Any production CSV covering a single shift's data. Can combine outputs from other skills if already run.
+## Step 1 — Read the file immediately
+Use the `read` tool to open the CSV file the user specified. If none specified, read `demo/production_data.csv`.
 
-## Steps
+## Step 2 — Extract shift data
+Identify what shifts are in the data. If the user asked for a specific shift, filter to that shift. Otherwise use the first shift found.
 
-1. **Extract shift metadata** — shift number/name, date, start/end time, machines active.
+## Step 3 — Compute headline metrics for the shift
+- Total units produced (sum across all machines)
+- Total target units
+- Attainment % = produced / target * 100
+- Total downtime minutes across all machines
+- Highest defect machine (most defect_count)
+- Overall OEE estimate if data allows
 
-2. **Compute headline metrics**:
-   - Total units produced vs. target
-   - Overall line OEE (if data allows)
-   - Total unplanned downtime
-   - Top defect rate
+## Step 4 — Identify top 3 issues
+Look for: machines with highest downtime, biggest gaps from target, highest defect counts.
 
-3. **Summarize top 3 issues** — the three things the incoming shift most needs to know about.
+## Step 5 — Write and SAVE the report
+Use the `write` tool to save the report to `demo/shift_report_output.md`.
+Then also print the full report to the terminal.
 
-4. **List open actions** — any issues that were not resolved and need follow-up.
+The report format:
 
-5. **Generate next-shift recommendations** — specific, actionable items for the incoming team.
-
-6. **Output a clean Markdown report**:
-
-```markdown
 # Shift Report — [Shift Name] | [Date]
 
-**Line:** [Line ID]  |  **Supervisor:** [if available]  |  **Duration:** [X hrs]
+**Line:** [Line/Factory ID if available]  |  **Duration:** 480 min (8 hrs)
 
 ---
 
 ## Headline Numbers
-| Metric | Actual | Target | Δ |
-|--------|--------|--------|---|
-| Units produced | 1,247 | 1,300 | -53 (-4.1%) |
-| OEE | 71.3% | 85% | -13.7pp |
-| Unplanned downtime | 42 min | 0 min | +42 min |
-| Defect rate | 2.1% | <1% | +1.1pp |
+| Metric | Actual | Target | Result |
+|--------|--------|--------|--------|
+| Units produced | [N] | [N] | [+/-N] ([X]%) |
+| Machines running | [N] | [N] | — |
+| Total downtime | [X] min | 0 min | +[X] min |
+| Best machine | [M-XX] ([N] units) | — | — |
+| Worst machine | [M-XX] ([N] units) | [N] | -[N] units |
 
 ---
 
-## Top 3 Issues This Shift
-1. **M-07 unplanned stop (23 min)** — sensor fault at 14:32. Temporary fix applied. Not resolved.
-2. **Station 3 cycle time increase** — avg 38s vs. 29s ideal. Operator reports tooling wear.
-3. **Defect spike on Batch #441** — 8 rejects, QC hold applied. Root cause TBD.
+## Top Issues This Shift
+1. **[Machine]: [Problem]** — [specific numbers from the data]
+2. **[Machine]: [Problem]** — [specific numbers]
+3. **[Finding]** — [specific numbers]
 
 ---
 
 ## Open Actions for Incoming Shift
-- [ ] M-07: maintenance team notified, awaiting parts (ETA: 06:00)
-- [ ] Station 3: tooling replacement needed before next run
-- [ ] Batch #441: QC disposition required
+- [ ] [Specific action needed based on data]
+- [ ] [Another action]
 
 ---
 
 ## Recommendations for Incoming Shift
-- Prioritize M-07 repair before 08:00 to recover line rate
-- Check Station 3 tooling before startup
-- Do not release Batch #441 until QC clears it
-```
-
-## Notes
-- This report is for humans, not for further machine processing. Use plain language in the issues section.
-- If target data is not in the CSV, omit the Δ column and note that targets are unavailable.
-- Never fabricate a supervisor name or targets that are not in the data.
+- [Specific recommendation 1]
+- [Specific recommendation 2]
+- [Specific recommendation 3]

@@ -1,60 +1,54 @@
 ---
 name: detect-bottlenecks
-description: "Identifies the production bottleneck — the stage with the longest cycle time or lowest throughput — using Theory of Constraints logic applied to CSV production data."
-allowed-tools: Bash Read Write
+description: "Identifies the production bottleneck by reading a CSV file and applying Theory of Constraints logic to find the slowest machine or station."
+allowed-tools: cli read write
 ---
 
 # Detect Bottlenecks
 
-## Purpose
-Find the constraint that limits the entire production line's output. The bottleneck is the slowest stage. Every other optimization is secondary until the bottleneck is addressed.
+When this skill is invoked, immediately take action. Do not wait for further instructions. Use the `read` tool right now to open the file.
 
-## Expected Input
-A CSV file with at least these columns (exact names may vary — infer from headers):
-- `machine_id` or `station_id` — identifier for each production stage
-- `cycle_time_sec` or equivalent — time to complete one unit
-- `units_produced` — output count per shift or time window
-- `shift` or `date` — time dimension (optional but useful)
+## Step 1 — Read the file immediately
+Use the `read` tool to open the CSV file the user specified. If no file path was given, read `demo/production_data.csv`.
 
-## Steps
+## Step 2 — Parse the headers
+Identify which columns represent: machine ID, station name, cycle time (seconds), units produced, ideal cycle time, shift, planned time, and downtime.
 
-1. **Parse the CSV** — read headers, detect column types, report row count and time range covered.
+## Step 3 — Calculate per-machine averages
+For each unique machine_id, compute:
+- Average cycle_time_sec across all shifts
+- Average units_produced per shift
+- Throughput = 3600 / avg_cycle_time (units per hour)
+- Gap from ideal = avg_cycle_time - ideal_cycle_time_sec
+- Gap percentage = (gap / ideal_cycle_time_sec) * 100
 
-2. **Calculate throughput per station** — for each machine/station:
-   - Average cycle time
-   - Units per hour (3600 / avg_cycle_time)
-   - Coefficient of variation (std_dev / mean) — high CV means inconsistent output
+## Step 4 — Rank and identify bottleneck
+Sort machines from highest to lowest average cycle time. The top machine is the bottleneck. Flag any machine within 10% of the bottleneck as a near-bottleneck.
 
-3. **Identify the bottleneck** — the station with:
-   - Highest average cycle time, OR
-   - Lowest units per hour, OR
-   - Highest queue buildup upstream (if queue data is present)
+## Step 5 — Print the full report
 
-4. **Check for secondary bottlenecks** — rank all stations by cycle time. If station #2 is within 10% of the primary bottleneck, flag it as a near-bottleneck.
+Print this report with real numbers filled in:
 
-5. **Report findings** in this format:
+BOTTLENECK ANALYSIS REPORT
+===========================
+File: [filename] | Rows: [N] | Machines: [N] | Shifts: [N]
 
-```
-BOTTLENECK ANALYSIS
-===================
-Primary bottleneck: [Station X]
-  Avg cycle time:   [X.X sec]  (line average: [Y.Y sec])
-  Throughput:       [X] units/hr  (line target: [Y] units/hr)
-  Impact:           Every minute of downtime here = [Z] minutes of lost output line-wide
+PRIMARY BOTTLENECK: [Machine ID] - [Station Name]
+  Average cycle time : [X.X] sec  (ideal: [Y] sec)
+  Throughput         : [X] units/hr
+  Slowdown vs ideal  : +[X.X] sec ([X]% above ideal)
 
-Near-bottleneck:   [Station Y] — [X.X sec], within [N]% of primary
+NEAR-BOTTLENECK: [Machine] at [X.X sec] — within [N]% of primary
 
-Ranked stations (slowest → fastest):
-  1. [Station X]  [X.X sec/unit]
-  2. [Station Y]  [X.X sec/unit]
+ALL STATIONS RANKED (slowest to fastest):
+  1. [M-XX] [Station]   [X.X sec]   [X/hr]   +[X]% vs ideal  <- BOTTLENECK
+  2. [M-XX] [Station]   [X.X sec]   [X/hr]   +[X]% vs ideal  <- NEAR-BOTTLENECK
+  3. [M-XX] [Station]   [X.X sec]   [X/hr]   +[X]% vs ideal
   ...
 
-Recommendation:
-  → [Specific, actionable next step for Station X]
-  → [Secondary recommendation if near-bottleneck is close]
-```
+RECOMMENDATIONS:
+  1. [Bottleneck machine]: [Specific action based on the data]
+  2. [Near-bottleneck if within 15%]: [Specific action]
+  3. [Any shift-level pattern noticed]: [Action]
 
-## Notes
-- If cycle times are missing for some stations, flag them and exclude from ranking.
-- If the CSV contains multiple shifts, report per-shift bottleneck separately — the bottleneck can shift between shifts.
-- Do not recommend "speed up the bottleneck" generically. Suggest specific levers: additional operator, reduced changeover time, preventive maintenance schedule, etc.
+Throughput improvement if bottleneck is fixed: ~[X]% increase in line output

@@ -1,80 +1,70 @@
 ---
 name: oee-calculator
-description: "Calculates Overall Equipment Effectiveness (OEE) — the gold standard manufacturing KPI — broken down into Availability, Performance, and Quality components."
-allowed-tools: Bash Read Write
+description: "Calculates OEE (Overall Equipment Effectiveness) per machine per shift. OEE = Availability x Performance x Quality. The gold standard manufacturing KPI."
+allowed-tools: cli read write
 ---
 
 # OEE Calculator
 
-## Purpose
-OEE (Overall Equipment Effectiveness) is the single most important metric in manufacturing. A world-class factory runs at 85% OEE. Most factories run at 40–60%. This skill computes OEE per machine and per shift, and decomposes it so engineers know exactly where the losses are.
+When this skill is invoked, immediately take action. Use the `read` tool right now to open the file. Do not wait.
 
-## Formula
-OEE = Availability × Performance × Quality
+## Step 1 — Read the file immediately
+Use the `read` tool to open the CSV file the user specified. If none specified, read `demo/production_data.csv`.
 
-- **Availability** = (Planned production time − Downtime) / Planned production time
-- **Performance** = (Actual output × Ideal cycle time) / Available time
-- **Quality** = Good units / Total units produced
+## Step 2 — Identify required columns
+Find columns for: machine_id, shift, planned_time_min, downtime_min, ideal_cycle_time_sec, units_produced (actual_output), good_units.
 
-## Expected Input
-A CSV with:
-- `machine_id`
-- `planned_time_min` — scheduled production window
-- `downtime_min` — total downtime in that window
-- `ideal_cycle_time_sec` — theoretical fastest cycle time
-- `actual_output` — units produced
-- `good_units` — units passing quality check
-- `shift` or `date`
+## Step 3 — Calculate OEE components for each machine+shift row
 
-Alternatively, the skill can compute components separately if data comes from multiple CSV files.
+For each row:
+- available_time_min = planned_time_min - downtime_min
+- Availability = available_time_min / planned_time_min
+- available_time_sec = available_time_min * 60
+- Performance = (units_produced * ideal_cycle_time_sec) / available_time_sec
+- Quality = good_units / units_produced
+- OEE = Availability * Performance * Quality
+- Express all as percentages
 
-## Steps
+Benchmark classification:
+- OEE >= 85%: World Class
+- OEE 65-84%: Typical
+- OEE 40-64%: Low
+- OEE < 40%: Critical
 
-1. **Validate inputs** — check for impossible values (downtime > planned time, good_units > actual_output, etc.).
+## Step 4 — Average across shifts per machine
 
-2. **Calculate the three components per machine per shift**:
-   - Availability = (planned_time − downtime) / planned_time
-   - Performance = (actual_output × ideal_cycle_time) / (available_time in seconds)
-   - Quality = good_units / actual_output
+Compute the average OEE, Availability, Performance, Quality for each machine across all its shifts.
 
-3. **Calculate OEE** = Availability × Performance × Quality
+## Step 5 — Print the full report
 
-4. **Classify against benchmarks**:
-   - ≥ 85%: World class
-   - 65–84%: Typical (room for improvement)
-   - 40–64%: Low (significant losses)
-   - < 40%: Critical
-
-5. **Identify the dominant loss** — which of the three components drags OEE down most?
-
-6. **Report format**:
-
-```
 OEE REPORT
 ==========
-Period: [date range]  |  Machines: [N]  |  Shifts: [N]
+File: [filename] | Period: [shifts] | Machines: [N]
 
-Machine  Shift  Availability  Performance  Quality   OEE    Benchmark
--------  -----  ------------  -----------  -------   ---    ---------
-M-01     S1     94.2%         81.3%        98.1%     75.1%  Typical
-M-02     S1     71.4%         88.6%        96.3%     60.9%  Low ⚠
-M-03     S1     89.7%         63.1%        97.4%     55.2%  Low ⚠
-M-07     S1     61.2%         79.8%        95.1%     46.4%  Critical 🔴
+Per-shift breakdown:
+  Machine  Shift   Avail   Perf    Quality  OEE     Class
+  -------  -----   -----   ----    -------  ---     -----
+  [M-XX]   [S1]    [X.X]%  [X.X]%  [X.X]%  [X.X]%  [Class]
+  [M-XX]   [S2]    ...
+  [M-XX]   [S3]    ...
+  [all machines and shifts]
 
-Line OEE (weighted average): 59.2%  →  Target: 85%  →  Gap: 25.8pp
+Average OEE per machine:
+  Machine   Station    Avg OEE    Avg Avail  Avg Perf  Avg Quality  Class
+  -------   -------    -------    ---------  --------  -----------  -----
+  [M-XX]    [Name]     [X.X]%     [X.X]%     [X.X]%    [X.X]%       [Class]
+  [ranked worst to best]
 
-Top OEE loss categories (all machines):
-  Availability losses:  38% of total gap  ← biggest lever
-  Performance losses:   41% of total gap
-  Quality losses:       21% of total gap
+Line OEE (weighted average): [X.X]%
+World class target          : 85%
+Gap to world class          : [X.X] percentage points
 
-Recommendations by loss type:
-  Availability → Address M-07 downtime (see downtime-analysis report)
-  Performance  → Station 3 cycle time optimization (see bottleneck report)
-  Quality      → M-02 defect rate at 3.7% — root cause investigation needed
-```
+Biggest loss category:
+  Availability losses : [X]% of total OEE gap
+  Performance losses  : [X]% of total OEE gap
+  Quality losses      : [X]% of total OEE gap
 
-## Notes
-- OEE must never be reported as a single number without its three components. The components tell you where to focus.
-- If ideal cycle time is not in the data, Performance cannot be calculated — report Availability and Quality only and flag the gap.
-- OEE below 40% is a data quality flag as well as an operational one — verify inputs before reporting.
+RECOMMENDATIONS:
+  1. [Worst machine]: [specific action]
+  2. [Biggest loss category]: [specific action]
+  3. [Overall line improvement potential]
